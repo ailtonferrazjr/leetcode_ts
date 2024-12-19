@@ -1,0 +1,6 @@
+#!/usr/bin/env sh
+. "$(dirname "$0")/_/husky.sh"
+
+npm run update:solutions
+# If README.md is updated by the script, re-add it to the commit
+git add README.md
