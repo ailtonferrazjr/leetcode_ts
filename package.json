@@ -9,7 +9,7 @@
     "exec": "tsx",
     "lint": "eslint . --ext .ts",
     "prepare": "husky",
-    "update:solutions": "tsx /src/utils/counter.ts"
+    "update:solutions": "tsx src/utils/counter.ts"
 
   },
   "keywords": [],
