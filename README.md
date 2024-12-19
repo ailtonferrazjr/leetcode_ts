@@ -6,7 +6,7 @@ Each solution includes detailed explanations, time and space complexity analysis
 ## Summary of Solutions
 - Easy: 3
 - Medium: 0
-- Hard: 1
+- Hard: 0
 
 ## 🎯 Purpose
 
