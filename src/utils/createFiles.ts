@@ -67,7 +67,7 @@ function parseTitle(title: string): string {
 function getFilePaths(title: string, difficulty: Difficulty): FilePaths {
   return {
     solution: path.join("src", difficulty, `${title}.ts`),
-    test: path.join("tests", difficulty, `${title}.tests.ts`),
+    test: path.join("tests", difficulty, `${title}.test.ts`),
   };
 }
 
