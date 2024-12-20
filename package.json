@@ -9,7 +9,8 @@
 		"exec": "tsx",
 		"lint": "npx @biomejs/biome check --write",
 		"prepare": "husky",
-		"update:solutions": "tsx src/utils/counter.ts"
+		"update:solutions": "tsx src/utils/counter.ts",
+		"new": "tsx src/utils/createFiles.ts"
 	},
 	"keywords": [],
 	"author": "Justin Ferraz",
@@ -17,7 +18,10 @@
 	"description": "",
 	"devDependencies": {
 		"@biomejs/biome": "1.9.4",
+		"@inquirer/prompts": "^7.2.0",
+		"@types/inquirer": "^9.0.7",
 		"@types/node": "^22.10.2",
+		"chalk": "^5.4.0",
 		"globals": "^15.14.0",
 		"husky": "^9.1.7",
 		"tsx": "^4.19.2",
