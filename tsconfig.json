@@ -1,35 +1,34 @@
 {
-    "compilerOptions": {
-      // Base Options
-      "esModuleInterop": true,
-      "skipLibCheck": true,
-      "target": "es2022",
-      "allowJs": true,
-      "resolveJsonModule": true,
-      "moduleDetection": "force",
-      "isolatedModules": true,
-      "verbatimModuleSyntax": true,
-  
-      // Strictness
-      "strict": true,
-      // "noUncheckedIndexedAccess": true,
-      "noImplicitOverride": true,
-  
-      // Transpiling with TypeScript
-      "module": "NodeNext",
-      "outDir": "dist",
-      "lib": ["es2022"],
+	"compilerOptions": {
+		// Base Options
+		"esModuleInterop": true,
+		"skipLibCheck": true,
+		"target": "es2022",
+		"allowJs": true,
+		"resolveJsonModule": true,
+		"moduleDetection": "force",
+		"isolatedModules": true,
+		"verbatimModuleSyntax": true,
 
-      // Paths
-      "baseUrl": "./",
-      "paths": {
-        "@easy/*": ["src/easy/*"],
-        "@medium/*": ["src/medium/*"],
-        "@hard/*": ["src/hard/*"],
-      },
+		// Strictness
+		"strict": true,
+		// "noUncheckedIndexedAccess": true,
+		"noImplicitOverride": true,
 
-      // Types
-      "types": ["vitest/globals"]
-    }
-  }
-  
+		// Transpiling with TypeScript
+		"module": "NodeNext",
+		"outDir": "dist",
+		"lib": ["es2022"],
+
+		// Paths
+		"baseUrl": "./",
+		"paths": {
+			"@easy/*": ["src/easy/*"],
+			"@medium/*": ["src/medium/*"],
+			"@hard/*": ["src/hard/*"]
+		},
+
+		// Types
+		"types": ["vitest/globals"]
+	}
+}

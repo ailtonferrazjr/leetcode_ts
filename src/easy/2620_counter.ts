@@ -1,4 +1,3 @@
-
 // 2620 - Counter
 // Given an integer n, return a counter function.
 
@@ -7,4 +6,7 @@
 // value every subsequent time it is called (n, n + 1, n + 2, etc).
 // https://leetcode.com/problems/counter
 
-export const createCounter = (n: number) => (): number => n++;
+export const createCounter = (n: number) => {
+	let count = n;
+	return (): number => count++;
+};
