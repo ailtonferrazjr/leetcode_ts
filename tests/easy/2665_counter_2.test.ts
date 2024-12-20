@@ -10,22 +10,30 @@ describe("2665 - Counter II Tests", () => {
 		},
 		{
 			init: 0,
-			sequence: ["increment", "increment", "decrement", "reset", "reset"] as (keyof Counter)[],
-			result: [1, 2, 1, 0, 0]
+			sequence: [
+				"increment",
+				"increment",
+				"decrement",
+				"reset",
+				"reset",
+			] as (keyof Counter)[],
+			result: [1, 2, 1, 0, 0],
 		},
 	];
 
-    test.each(testSamples)(
-        "starting from $init, running the sequence $sequence to produce result $result"
-    ,({init, sequence, result}: {init: number, sequence: (keyof Counter)[], result: number[]}) => {
-
-        const counter = createCounter(init);
-        const results: number[] = [];
-        sequence.forEach(element => {
-            results.push(counter[element]());
-        });
-        expect(results).toEqual(result)
-
-    })
-
+	test.each(testSamples)(
+		"starting from $init, running the sequence $sequence to produce result $result",
+		({
+			init,
+			sequence,
+			result,
+		}: { init: number; sequence: (keyof Counter)[]; result: number[] }) => {
+			const counter = createCounter(init);
+			const results: number[] = [];
+			sequence.forEach((element) => {
+				results.push(counter[element]());
+			});
+			expect(results).toEqual(result);
+		},
+	);
 });
