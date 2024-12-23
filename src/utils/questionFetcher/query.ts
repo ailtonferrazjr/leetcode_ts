@@ -5,8 +5,6 @@ const questionContentQuery = `query questionContent($titleSlug: String!) {
     }
   }`;
 
-
-
 const questionDataQuery = `query questionTitle($titleSlug: String!) {
   question(titleSlug: $titleSlug) {
     questionId
@@ -19,9 +17,9 @@ const questionDataQuery = `query questionTitle($titleSlug: String!) {
     dislikes
   }
 }
-`
+`;
 
 export const queries = {
-    questionContentQuery,
-    questionDataQuery
+	questionContentQuery,
+	questionDataQuery,
 };
