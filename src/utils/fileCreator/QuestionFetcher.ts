@@ -1,3 +1,13 @@
+/**
+ * @fileoverview
+ * A set of classes and utilities to fetch, parse, and generate code comments for LeetCode problems using the LeetCode GraphQL API.
+ *
+ * Includes:
+ * - `QuestionFetcher`: Main class to handle fetching and parsing question data
+ * - `QuestionParser`: Helper class to parse HTML content into structured text
+ * - `QuestionCommentBlock`: Helper class to generate standardized comment blocks for both problem and test files
+ */
+
 import * as cheerio from "cheerio";
 import { type ChildNode, Element, Text } from "domhandler";
 import { gql, request } from "graphql-request";
@@ -5,6 +15,9 @@ import { ElementType } from "htmlparser2";
 import { queries } from "./query.js";
 import { Difficulty, type Question } from "./types.js";
 
+/**
+ * LeetCode's GraphQL response structure for general question data (title, difficulty, etc.).
+ */
 interface QuestionData {
 	question: {
 		questionId: string;
@@ -17,18 +30,34 @@ interface QuestionData {
 		dislikes: number;
 	};
 }
+
+/**
+ * LeetCode's GraphQL response structure for the question content (HTML description).
+ */
 interface QuestionContent {
-	question: { content: string; [key: string]: string };
+	question: {
+		content: string;
+		[key: string]: string;
+	};
 }
+
+/**
+ * Represents parsed HTML content, separating the problem description, examples, and constraints.
+ */
 interface ParsedHTML {
+	/** Text-based description of the problem (after HTML parsing). */
 	description: string;
+
+	/** An array of example code blocks or usage examples. */
 	examples: string[];
+
+	/** An array of constraints extracted from the problem statement. */
 	constraints: string[];
 }
 
 /**
  * @class QuestionFetcher
- * @description A utility class that fetches and parses LeetCode question data through GraphQL API.
+ * @description A utility class that fetches and parses LeetCode question data through the GraphQL API.
  *
  * This class is responsible for:
  * - Fetching question content and metadata from LeetCode's GraphQL API
@@ -55,7 +84,7 @@ interface ParsedHTML {
  * @throws {Error} Throws an error if unable to fetch question data from LeetCode API
  *
  * @remarks
- * - Uses singleton pattern with async initialization through static create method
+ * - Uses a pseudo-singleton pattern with async initialization through a static `create` method
  * - Implements lazy loading through promise-based initialization
  * - Handles both question content and metadata through separate GraphQL queries
  * - Provides parsing utilities for LeetCode's HTML content format
@@ -65,35 +94,64 @@ interface ParsedHTML {
  * @see {@link QuestionParser} for HTML parsing utilities
  */
 export class QuestionFetcher {
+	/** The LeetCode GraphQL endpoint to which queries are sent. */
 	private endpoint: string = "https://leetcode.com/graphql";
+	/** The URL of the target LeetCode problem. */
 	private url: string;
+	/** Contains pre-defined GraphQL queries for question content and metadata. */
 	private queries: { questionContentQuery: string; questionDataQuery: string } =
 		queries;
+	/** Tracks whether the `QuestionFetcher` has been initialized. */
 	private initPromise: Promise<void> | null = null;
 
+	/** The parsed LeetCode question data, including ID, title, description, etc. */
 	public question!: Question;
+	/** Comment blocks for both the question and its tests. */
 	public comments!: { questionComments: string; testsComments: string };
 
+	/**
+	 * Factory method to create and initialize a `QuestionFetcher`.
+	 *
+	 * @param url - The URL of the LeetCode problem (e.g., "https://leetcode.com/problems/two-sum/").
+	 * @returns An initialized `QuestionFetcher` instance.
+	 */
 	static async create(url: string): Promise<QuestionFetcher> {
 		const fetcher = new QuestionFetcher(url);
 		await fetcher.init();
 		return fetcher;
 	}
+
+	/**
+	 * Private constructor to enforce usage of the `create` method for async initialization.
+	 * @param url - The LeetCode problem URL.
+	 */
 	private constructor(url: string) {
 		this.url = url;
+		// Start initialization in the constructor, but it's also re-called in `create`
+		// to ensure it only runs once.
 		this.init();
 	}
-	private async init() {
+
+	/**
+	 * Initiates the async initialization process. Uses a lazy-loaded promise to
+	 * ensure `_initialize` only runs once.
+	 *
+	 * @returns A promise that resolves once initialization is complete.
+	 */
+	private async init(): Promise<void> {
 		if (!this.initPromise) {
 			this.initPromise = this._initialize();
 		}
 		return this.initPromise;
 	}
+
 	/**
-	 * Initializes the QuestionFetcher instance by fetching and parsing question data.
+	 * Performs the actual fetching/parsing of question data, then populates the
+	 * `question` and `comments` fields on this instance.
+	 *
 	 * @private
 	 */
-	private async _initialize() {
+	private async _initialize(): Promise<void> {
 		const { questionContent, questionData } = await this.getQuestionData(
 			this.url,
 		);
@@ -103,32 +161,39 @@ export class QuestionFetcher {
 			testsComments: QuestionCommentBlock.tests(this.question),
 		};
 	}
+
 	/**
-	 * Fetches both content and metadata for a LeetCode question.
-	 * @param {string} url - The LeetCode question URL
-	 * @returns {Promise<{questionContent: QuestionContent; questionData: QuestionData}>}
+	 * Fetches both the question content (HTML) and question data (metadata) from LeetCode.
+	 *
+	 * @param url - The LeetCode question URL.
+	 * @returns An object containing the question content and question metadata.
 	 * @private
 	 */
 	private async getQuestionData(
 		url: string,
 	): Promise<{ questionContent: QuestionContent; questionData: QuestionData }> {
 		const titleSlug = this.parseUrl(url);
+
 		const questionContent = (await this.queryQuestion(
 			this.queries.questionContentQuery,
 			titleSlug,
 		)) as QuestionContent;
+
 		const questionData = (await this.queryQuestion(
 			this.queries.questionDataQuery,
 			titleSlug,
 		)) as QuestionData;
+
 		return { questionContent, questionData };
 	}
+
 	/**
 	 * Executes a GraphQL query against the LeetCode API.
-	 * @param {string} query - The GraphQL query to execute
-	 * @param {string} titleSlug - The question's title slug
-	 * @returns {Promise<QuestionContent | QuestionData>}
-	 * @throws {Error} If the query fails
+	 *
+	 * @param query - The GraphQL query string to execute.
+	 * @param titleSlug - The title slug extracted from the LeetCode problem URL.
+	 * @returns A Promise resolving to the requested `QuestionContent` or `QuestionData`.
+	 * @throws {Error} If the query fails, includes the original error message.
 	 * @private
 	 */
 	private async queryQuestion(
@@ -137,25 +202,59 @@ export class QuestionFetcher {
 	): Promise<QuestionContent | QuestionData> {
 		try {
 			const document = gql`${query}`;
-			return await request(this.endpoint, document, {
-				titleSlug: titleSlug,
-			});
+			return await request(this.endpoint, document, { titleSlug });
 		} catch (error) {
 			throw new Error(`Failed to fetch question data: ${error}`);
 		}
 	}
+
+	/**
+	 * Normalizes the input URL into a standard LeetCode problem URL.
+	 *
+	 * @param url - The original LeetCode problem URL.
+	 * @returns The clean, normalized URL.
+	 * @private
+	 */
 	private getCleanUrl(url: string): string {
 		return `https://leetcode.com/problems/${this.parseUrl(url)}/`;
 	}
 
+	/**
+	 * Extracts the title slug from a given LeetCode problem URL.
+	 *
+	 * @example
+	 * // 'https://leetcode.com/problems/counter-ii/description/' -> 'counter-ii'
+	 *
+	 * @param url - The LeetCode problem URL.
+	 * @returns The parsed slug (e.g., "counter-ii").
+	 * @private
+	 */
 	private parseUrl(url: string): string {
 		// 'https://leetcode.com/problems/counter-ii/description/'
 		return url.split("/problems/")[1].split("/")[0];
 	}
+
+	/**
+	 * Parses the raw HTML content from LeetCode into a structured `ParsedHTML` object.
+	 *
+	 * @param html - The raw HTML content to parse.
+	 * @returns A `ParsedHTML` object containing description, examples, and constraints.
+	 * @private
+	 */
 	private parseContent(html: string): ParsedHTML {
 		const parsedHtml = QuestionParser.parseProblemHtml(html);
 		return parsedHtml;
 	}
+
+	/**
+	 * Combines the fetched metadata (`questionData`) with the parsed HTML content (`questionContent`)
+	 * to form a unified `Question` object.
+	 *
+	 * @param questionData - Object containing question metadata (ID, title, difficulty, etc.).
+	 * @param questionContent - Object containing HTML content from the question.
+	 * @returns A fully populated `Question` instance.
+	 * @private
+	 */
 	private parseQuestion(
 		questionData: QuestionData,
 		questionContent: QuestionContent,
@@ -165,38 +264,41 @@ export class QuestionFetcher {
 		);
 		const { title, titleSlug, questionFrontendId, difficulty } =
 			questionData.question;
+
 		return {
-			title: title,
-			titleSlug: titleSlug,
+			title,
+			titleSlug,
 			questionId: questionFrontendId,
-			description: description,
-			examples: examples,
-			constraints: constraints,
-			difficulty: difficulty,
+			description,
+			examples,
+			constraints,
+			difficulty,
 			questionUrl: this.getCleanUrl(this.url),
 		};
 	}
 }
+
 /**
  * Parses LeetCode HTML content and extracts problem description, examples, and constraints.
  *
- * @static
- * @param {string} html - The HTML content from a LeetCode problem page
- * @returns {ParsedHTML} An object containing the parsed problem information
- * @property {string} description - The problem description text
- * @property {string[]} examples - Array of example test cases
- * @property {string[]} constraints - Array of problem constraints
- *
- * @example
- * const html = '<div>problem content...</div>';
- * const parsed = QuestionParser.parseProblemHtml(html);
- * console.log(parsed.description); // Problem description
- * console.log(parsed.examples); // Array of examples
- * console.log(parsed.constraints); // Array of constraints
+ * @class
+ * @description Utility class containing a static method for parsing problem HTML
+ * into a standardized structure.
  */
 export class QuestionParser {
 	/**
-	 * Parses LeetCode HTML content into a structured format
+	 * Parses LeetCode HTML content into a `ParsedHTML` object containing `description`,
+	 * `examples`, and `constraints`.
+	 *
+	 * @param html - The raw HTML content from a LeetCode problem page
+	 * @returns {ParsedHTML} An object containing the parsed problem information
+	 *
+	 * @example
+	 * const html = '<div>problem content...</div>';
+	 * const parsed = QuestionParser.parseProblemHtml(html);
+	 * console.log(parsed.description); // Problem description
+	 * console.log(parsed.examples); // Array of examples
+	 * console.log(parsed.constraints); // Array of constraints
 	 */
 	static parseProblemHtml(html: string): ParsedHTML {
 		// 1) Load the entire HTML into $full (for examples & constraints)
@@ -204,7 +306,7 @@ export class QuestionParser {
 
 		// 2) Find the index of the first <strong class="example"> in the raw HTML
 		const firstExampleIndex = html.indexOf('<strong class="example">');
-		// If none is found, the entire HTML is the description
+		// If none is found, the entire HTML is considered the description
 		let descHtml =
 			firstExampleIndex > -1 ? html.slice(0, firstExampleIndex) : html;
 		descHtml = descHtml.trim();
@@ -213,18 +315,15 @@ export class QuestionParser {
 		const $desc = cheerio.load(descHtml);
 
 		// 4) GLOBAL REPLACEMENTS on $desc to preserve your custom formatting
-		//
 		// (A) Replace every <code>...</code> with "..."
 		$desc("code").each((_, codeEl) => {
 			const codeText = $desc(codeEl).text().trim();
-			// Replace <code>...</code> with "someCode"
 			$desc(codeEl).replaceWith(`"${codeText}"`);
 		});
 
 		// (B) Replace every <pre> with "\n -> preText\n\n"
 		$desc("pre").each((_, preEl) => {
 			const preText = $desc(preEl).text().trim();
-			// We insert a short marker with leading/trailing newlines
 			const replacement = `\n -> ${preText}\n\n`;
 			$desc(preEl).replaceWith(replacement);
 		});
@@ -233,21 +332,17 @@ export class QuestionParser {
 		$desc("ul").each((_, ulEl) => {
 			const bulletLines: string[] = [];
 			const $lis = $desc(ulEl).find("li");
-			// Build lines like:
-			//   -> bullet 1
-			//   -> bullet 2
-			// with blank lines around
+
 			$lis.each((_index, li) => {
 				const bulletText = $desc(li).text().trim();
 				bulletLines.push(` -> ${bulletText}\n`);
 			});
-			// Insert newlines before & after
+
 			const replacement = `\n${bulletLines.join("")}\n`;
 			$desc(ulEl).replaceWith(replacement);
 		});
 
-		// (D) Now we can get pure text from $desc
-		// This includes all the replaced strings for <pre> / <ul> / <code>
+		// (D) Convert the modified Cheerio object into text
 		let description = $desc.root().text();
 
 		// 5) Clean up extra newlines
@@ -292,7 +387,7 @@ export class QuestionParser {
  * question files and test files.
  */
 class QuestionCommentBlock {
-	/** Maximum width for generated comments */
+	/** Maximum width for generated comments. */
 	private static readonly COMMENT_WIDTH = 80;
 
 	/**
@@ -303,14 +398,14 @@ class QuestionCommentBlock {
 	 *
 	 * @example
 	 * const comment = QuestionCommentBlock.question(questionData);
-	 * // Result:
+	 * // Result (simplified):
 	 * /*
 	 *  * 123 | Two Sum
 	 *  * Difficulty: Easy
 	 *  * ----------------
 	 *  * Description: Given an array of integers...
 	 *  * URL: https://leetcode.com/problems/two-sum/
-	 * ∕/
+	 * ∕
 	 */
 	static question(question: Question): string {
 		const lines: string[] = [];
@@ -333,7 +428,6 @@ class QuestionCommentBlock {
 		lines.push(" *");
 
 		lines.push(` * URL: ${question.questionUrl}`);
-
 		lines.push("*/");
 		return lines.join("\n");
 	}
@@ -346,18 +440,17 @@ class QuestionCommentBlock {
 	 *
 	 * @example
 	 * const testComment = QuestionCommentBlock.tests(questionData);
-	 * // Result:
+	 * // Result (simplified):
 	 * /*
 	 *  * TESTS FILE
 	 *  * 123 | Two Sum
 	 *  * Difficulty: Easy
 	 *  * ----------------
-	 * ∕/
+	 * ∕
 	 */
 	static tests(question: Question): string {
 		const lines: string[] = [];
 
-		// Header
 		const header = [
 			"/*",
 			` * TESTS FILE`,
@@ -379,7 +472,7 @@ class QuestionCommentBlock {
 	 * @returns {string[]} Array of wrapped text lines
 	 *
 	 * @private
-	 * @description Splits text into lines that fit within COMMENT_WIDTH,
+	 * @description Splits text into lines that fit within `COMMENT_WIDTH`,
 	 * preserving paragraph structure and handling word wrapping appropriately.
 	 */
 	private static wrapText(text: string): string[] {
@@ -396,7 +489,7 @@ class QuestionCommentBlock {
 					currentLine = "";
 					return;
 				}
-
+				// Check if adding another word will exceed the line width
 				if (currentLine.length + word.length + 1 <= this.COMMENT_WIDTH - 3) {
 					currentLine += (currentLine.length === 0 ? "" : " ") + word;
 				} else {
@@ -409,11 +502,11 @@ class QuestionCommentBlock {
 				lines.push(currentLine);
 			}
 
-			// Add empty line between paragraphs
+			// Add empty line after each paragraph
 			lines.push("");
 		});
 
-		// Remove last empty line
+		// Remove the trailing empty line if present
 		if (lines[lines.length - 1] === "") {
 			lines.pop();
 		}
