@@ -1,3 +1,3 @@
-npm run update:solutions
+npm run update:counter
 # If README.md is updated by the script, re-add it to the commit
 git add README.md
