@@ -26,6 +26,58 @@ Each solution includes detailed explanations, time and space complexity analysis
 - Vitest for testing
 - Husky for Git Hook
 
+## 📦 Getting Started
+
+1. **Clone the Repository**  
+
+   ```bash
+   git clone https://github.com/ailtonferrazjr/leetcode_ts.git
+    ```
+
+2. **Install Dependencies**
+
+
+    ```bash
+    cd leetcode-ts
+    npm install
+    ```
+
+3. **(Optional) Start Fresh**
+
+    If you would like to remove all existing solutions and begin from an empty repository:
+
+
+    ```bash
+    npm run init
+    ```
+
+    - You will be prompted whether you want to remove all existing solutions.
+    - If you confirm, the script removes all solution/test files and resets counters to 0 in the README.
+
+4. **Add a New LeetCode Problem**
+
+    You can add new solutions any time using:
+
+    ```bash
+    npm run new
+    ```
+
+    - You will be prompted to enter the URL of a LeetCode problem (e.g., https://leetcode.com/problems/two-sum/).
+    - The script automatically:
+        - Fetches the problem details from LeetCode
+        - Generates solution and test files
+        - Places them into src/<difficulty> and tests/<difficulty> respectively
+
+
+5. **Run Tests**
+
+    ```bash
+    npm run test
+    ```
+
+    - Uses Vitest to run unit tests for each solution.
+    - Great way to verify your solutions are correct and robust.
+
 ## 📜 License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
