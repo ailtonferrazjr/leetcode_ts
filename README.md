@@ -8,6 +8,12 @@ Each solution includes detailed explanations, time and space complexity analysis
 - Medium: 0
 - Hard: 0
 
+## 🚀 Features
+
+- Automatically fetches problem details from LeetCode
+- Generates structured solution and test files
+- Organizes files by difficulty level
+
 ## 🎯 Purpose
 
 - Improve problem-solving skills through code

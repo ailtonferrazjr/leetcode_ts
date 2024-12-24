@@ -1,13 +1,19 @@
-// 2635. Apply Transform Over Each Element in Array
-
-// Given an integer array arr and a mapping function fn, return a new array with a transformation applied to each element.
-// The returned array should be created such that returnedArray[i] = fn(arr[i], i).
-// Please solve it without the built-in Array.map method.
-
-// https://leetcode.com/problems/apply-transform-over-each-element-in-array/
-
-// Justin's comment:
-// This is a super basic problem, but can be solved by multiple different ways, that will have different memory usage and speed
+/*
+ * 2635 | Apply Transform Over Each Element in Array
+ * Difficulty: Easy
+ * ----------------
+ *
+ * Description:
+ * Given an integer array "arr" and a mapping function "fn", return a new array
+ * with a transformation applied to each element.
+ * 
+ * The returned array should be created such that "returnedArray[i] = fn(arr[i],
+ * i)".
+ * 
+ * Please solve it without the built-in "Array.map" method.
+ *
+ * URL: https://https://leetcode.com/problems/apply-transform-over-each-element-in-array/
+*/
 
 export const mapFunctions = {
 	emptyArrayApproach,

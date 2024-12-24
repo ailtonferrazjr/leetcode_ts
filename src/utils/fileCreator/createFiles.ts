@@ -1,18 +1,9 @@
 import { promises as fs } from "fs";
 import path from "path";
-import { input, select } from "@inquirer/prompts";
+import { input } from "@inquirer/prompts";
 import chalk from "chalk";
-
-enum Difficulty {
-	Easy = "easy",
-	Medium = "medium",
-	Hard = "hard",
-}
-
-interface ProblemDetails {
-	problemName: string;
-	difficulty: Difficulty;
-}
+import { QuestionFetcher } from "./QuestionFetcher.js";
+import { Difficulty, type Question } from "./types.js";
 
 interface FilePaths {
 	solution: string;
@@ -23,25 +14,16 @@ interface FilePaths {
  * Starts the prompt to collect problem name and difficulty from the user.
  * @returns {Promise<ProblemDetails>} The problem name and selected difficulty.
  */
-async function startPrompt(): Promise<ProblemDetails> {
+async function startPrompt(): Promise<string> {
 	try {
-		const problemName = await input({
+		const url = await input({
 			message:
-				"Please provide the Leetcode problem name (e.g., '3238. Find the Number of Winning Players'):\n",
+				"Please provide the Leetcode URL (e.g., 'https://leetcode.com/problems/find-the-number-of-winning-players/'):\n",
 			validate: (input: string) =>
 				input.trim().length > 0 || "Problem name cannot be empty.",
 		});
 
-		const difficulty = await select({
-			message: "Please select the problem difficulty:",
-			choices: [
-				{ name: "Easy", value: Difficulty.Easy },
-				{ name: "Medium", value: Difficulty.Medium },
-				{ name: "Hard", value: Difficulty.Hard },
-			],
-		});
-
-		return { problemName: problemName.trim(), difficulty };
+		return url;
 	} catch (error) {
 		console.error(chalk.red("Error during input collection:"), error);
 		throw error;
@@ -53,8 +35,12 @@ async function startPrompt(): Promise<ProblemDetails> {
  * @param {string} title - The original problem title.
  * @returns {string} The parsed title suitable for file naming.
  */
-function parseTitle(title: string): string {
-	return title.replace(/\.\s*/, "_").replace(/\s+/g, "_").toLowerCase();
+function parseTitle(question: Question): string {
+	const title = question.title
+		.replace(/\.\s*/, "_")
+		.replace(/\s+/g, "_")
+		.toLowerCase();
+	return question.questionId + "_" + title;
 }
 
 /**
@@ -65,8 +51,8 @@ function parseTitle(title: string): string {
  */
 function getFilePaths(title: string, difficulty: Difficulty): FilePaths {
 	return {
-		solution: path.join("src", difficulty, `${title}.ts`),
-		test: path.join("tests", difficulty, `${title}.test.ts`),
+		solution: path.join("src", difficulty.toLowerCase(), `${title}.ts`),
+		test: path.join("tests", difficulty.toLowerCase(), `${title}.test.ts`),
 	};
 }
 
@@ -75,24 +61,21 @@ function getFilePaths(title: string, difficulty: Difficulty): FilePaths {
  * @param {string} problemName - The original problem name.
  * @param {Difficulty} difficulty - The selected difficulty level.
  */
-async function createFiles(
-	problemName: string,
-	difficulty: Difficulty,
-): Promise<void> {
+async function createFiles(fetcher: QuestionFetcher): Promise<void> {
 	try {
-		const title = parseTitle(problemName);
-		const { solution, test } = getFilePaths(title, difficulty);
+		// Parse the title of the problem
+		const title = parseTitle(fetcher.question);
+		const { solution, test } = getFilePaths(title, fetcher.question.difficulty);
 
 		// Ensure directories exist
 		await fs.mkdir(path.dirname(solution), { recursive: true });
 		await fs.mkdir(path.dirname(test), { recursive: true });
 
+		// Create the comments
+
 		// Write to solution and test files
-		await fs.writeFile(solution, `// ${problemName}\n\n`);
-		await fs.writeFile(
-			test,
-			`// ${problemName}\n// Test cases will be added here.\n`,
-		);
+		await fs.writeFile(solution, fetcher.comments.questionComments);
+		await fs.writeFile(test, fetcher.comments.testsComments);
 	} catch (error) {
 		console.error(chalk.red("Error creating files:"), error);
 		throw error;
@@ -105,10 +88,13 @@ async function createFiles(
 async function main(): Promise<void> {
 	try {
 		// Start the prompt to collect problem name and difficulty
-		const { problemName, difficulty } = await startPrompt();
+		const url = await startPrompt();
+
+		// Then start the fetcher to return the problem data
+		const fetcher: QuestionFetcher = await QuestionFetcher.create(url);
 
 		// Create the files
-		await createFiles(problemName, difficulty);
+		await createFiles(fetcher);
 
 		// Log the successful creation of files
 		console.log(chalk.green("Files created successfully!"));

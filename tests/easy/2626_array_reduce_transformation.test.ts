@@ -1,5 +1,10 @@
-// 2626. Array Reduce Transformation
-// Test cases will be added here.
+/*
+ * TESTS FILE
+ * 2626 | Array Reduce Transformation
+ * Difficulty: Easy
+ * ----------------
+ *
+*/
 
 import { type Fn, reduce } from "@easy/2626_array_reduce_transformation.js";
 
