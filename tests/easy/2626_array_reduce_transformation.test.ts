@@ -4,7 +4,7 @@
  * Difficulty: Easy
  * ----------------
  *
-*/
+ */
 
 import { type Fn, reduce } from "@easy/2626_array_reduce_transformation.js";
 

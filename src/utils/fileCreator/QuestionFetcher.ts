@@ -1,7 +1,7 @@
 import * as cheerio from "cheerio";
 import { gql, request } from "graphql-request";
-import { Difficulty, type Question } from "./types.js";
 import { queries } from "./query.js";
+import { Difficulty, type Question } from "./types.js";
 
 interface QuestionData {
 	question: {
@@ -18,7 +18,6 @@ interface QuestionData {
 interface QuestionContent {
 	question: { content: string; [key: string]: string };
 }
-
 interface ParsedHTML {
 	description: string;
 	examples: string[];
@@ -28,13 +27,13 @@ interface ParsedHTML {
 /**
  * @class QuestionFetcher
  * @description A utility class that fetches and parses LeetCode question data through GraphQL API.
- * 
+ *
  * This class is responsible for:
  * - Fetching question content and metadata from LeetCode's GraphQL API
  * - Parsing the HTML content of questions
  * - Generating formatted comments for both questions and tests
  * - Managing the initialization state through promises
- * 
+ *
  * @example
  * ```typescript
  * const fetcher = await QuestionFetcher.create('https://leetcode.com/problems/some-problem');
@@ -43,22 +42,22 @@ interface ParsedHTML {
  * // Access generated comments
  * console.log(fetcher.comments);
  * ```
- * 
+ *
  * @property {string} endpoint - The LeetCode GraphQL API endpoint
  * @property {string} url - The URL of the LeetCode problem
  * @property {Object} queries - Contains GraphQL queries for fetching question content and data
  * @property {Promise<void> | null} initPromise - Promise that tracks initialization status
  * @property {Question} question - The parsed question data
  * @property {Object} comments - Contains generated comment blocks for questions and tests
- * 
+ *
  * @throws {Error} Throws an error if unable to fetch question data from LeetCode API
- * 
+ *
  * @remarks
  * - Uses singleton pattern with async initialization through static create method
  * - Implements lazy loading through promise-based initialization
  * - Handles both question content and metadata through separate GraphQL queries
  * - Provides parsing utilities for LeetCode's HTML content format
- * 
+ *
  * @see {@link Question} for the structure of parsed question data
  * @see {@link QuestionCommentBlock} for comment generation utilities
  * @see {@link QuestionParser} for HTML parsing utilities
@@ -116,7 +115,6 @@ export class QuestionFetcher {
 			this.queries.questionContentQuery,
 			titleSlug,
 		)) as QuestionContent;
-		console.log(questionContent);
 		const questionData = (await this.queryQuestion(
 			this.queries.questionDataQuery,
 			titleSlug,
@@ -145,7 +143,7 @@ export class QuestionFetcher {
 		}
 	}
 	private getCleanUrl(url: string): string {
-		return `https://https://leetcode.com/problems/${this.parseUrl(url)}/`;
+		return `https://leetcode.com/problems/${this.parseUrl(url)}/`;
 	}
 
 	private parseUrl(url: string): string {
@@ -154,7 +152,6 @@ export class QuestionFetcher {
 	}
 	private parseContent(html: string): ParsedHTML {
 		const parsedHtml = QuestionParser.parseProblemHtml(html);
-		console.log(parsedHtml);
 		return parsedHtml;
 	}
 	private parseQuestion(
@@ -178,13 +175,29 @@ export class QuestionFetcher {
 		};
 	}
 }
+/**
+ * Parses LeetCode HTML content and extracts problem description, examples, and constraints.
+ * 
+ * @static
+ * @param {string} html - The HTML content from a LeetCode problem page
+ * @returns {ParsedHTML} An object containing the parsed problem information
+ * @property {string} description - The problem description text
+ * @property {string[]} examples - Array of example test cases
+ * @property {string[]} constraints - Array of problem constraints
+ * 
+ * @example
+ * const html = '<div>problem content...</div>';
+ * const parsed = QuestionParser.parseProblemHtml(html);
+ * console.log(parsed.description); // Problem description
+ * console.log(parsed.examples); // Array of examples
+ * console.log(parsed.constraints); // Array of constraints
+ */
 class QuestionParser {
 	/**
 	 * Parses LeetCode HTML content into a structured format
 	 */
 	static parseProblemHtml(html: string): ParsedHTML {
 		const $ = cheerio.load(html);
-
 		// Find the first example header
 		const firstExample = $("strong.example").first().closest("p");
 
@@ -192,13 +205,39 @@ class QuestionParser {
 		if (firstExample.length) {
 			const parts: string[] = [];
 
+			// Extract all elements before the first example
 			firstExample.prevAll().each((_, element) => {
 				const $el = $(element);
 
+				// In case it's a pre element, we need to
 				if ($el.is("pre")) {
-					parts.unshift("");
-					parts.unshift("-> " + $el.text().trim() + "\n\n");
-					parts.unshift("");
+					parts.unshift("\n");
+					parts.unshift(" -> " + $el.text().trim() + "\n\n");
+					parts.unshift(" \n");
+					return;
+				}
+
+				if ($el.is("ul")) {
+					const bullets: string[] = [];
+					$el.find("li").each((i, li) => {
+						if (i === 0) {
+							bullets.push("\n");
+							bullets.push(" -> " + $(li).text().trim());
+							bullets.push(" \n");
+							return;
+						}
+
+						if (i == $el.find("li").length - 1) {
+							bullets.push(" -> " + $(li).text().trim());
+							bullets.push(" \n");
+							bullets.push("\n");
+							return;
+						}
+
+						bullets.push(" -> " + $(li).text().trim());
+						bullets.push(" \n");
+					});
+					parts.unshift(...bullets);
 					return;
 				}
 
@@ -251,7 +290,7 @@ class QuestionParser {
 }
 /**
  * Class responsible for generating formatted comment blocks for LeetCode questions.
- * 
+ *
  * @class QuestionCommentBlock
  * @description Provides static methods to generate standardized comments for both
  * question files and test files.
@@ -262,10 +301,10 @@ class QuestionCommentBlock {
 
 	/**
 	 * Generates a formatted comment block for the main question file.
-	 * 
+	 *
 	 * @param {Question} question - Object containing LeetCode question data
 	 * @returns {string} Formatted comment with question information
-	 * 
+	 *
 	 * @example
 	 * const comment = QuestionCommentBlock.question(questionData);
 	 * // Result:
@@ -305,10 +344,10 @@ class QuestionCommentBlock {
 
 	/**
 	 * Generates a formatted comment block for the test file.
-	 * 
+	 *
 	 * @param {Question} question - Object containing LeetCode question data
 	 * @returns {string} Formatted comment with test file information
-	 * 
+	 *
 	 * @example
 	 * const testComment = QuestionCommentBlock.tests(questionData);
 	 * // Result:
@@ -339,10 +378,10 @@ class QuestionCommentBlock {
 
 	/**
 	 * Utility method to wrap text content within the specified comment width.
-	 * 
+	 *
 	 * @param {string} text - The text content to be wrapped
 	 * @returns {string[]} Array of wrapped text lines
-	 * 
+	 *
 	 * @private
 	 * @description Splits text into lines that fit within COMMENT_WIDTH,
 	 * preserving paragraph structure and handling word wrapping appropriately.
@@ -356,6 +395,12 @@ class QuestionCommentBlock {
 			let currentLine = "";
 
 			words.forEach((word) => {
+				if (word === "\n") {
+					lines.push(currentLine);
+					currentLine = "";
+					return;
+				}
+
 				if (currentLine.length + word.length + 1 <= this.COMMENT_WIDTH - 3) {
 					currentLine += (currentLine.length === 0 ? "" : " ") + word;
 				} else {

@@ -10,7 +10,7 @@
 		"lint": "npx @biomejs/biome check --write",
 		"prepare": "husky",
 		"update:solutions": "tsx src/utils/counter.ts",
-		"new": "tsx src/utils/createFiles.ts"
+		"new": "tsx src/utils/fileCreator/createFiles.ts"
 	},
 	"keywords": [],
 	"author": "Justin Ferraz",
