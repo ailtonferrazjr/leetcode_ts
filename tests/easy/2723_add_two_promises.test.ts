@@ -1,6 +1,6 @@
 /*
  * TESTS FILE
- * 2703 | Return Length of Arguments Passed
+ * 2723 | Add Two Promises
  * Difficulty: Easy
  * ----------------
  *

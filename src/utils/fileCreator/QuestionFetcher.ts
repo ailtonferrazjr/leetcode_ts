@@ -2,6 +2,9 @@ import * as cheerio from "cheerio";
 import { gql, request } from "graphql-request";
 import { queries } from "./query.js";
 import { Difficulty, type Question } from "./types.js";
+import { type ChildNode, Element, Text } from "domhandler";
+import { ElementType } from "htmlparser2";
+
 
 interface QuestionData {
 	question: {
@@ -192,102 +195,96 @@ export class QuestionFetcher {
  * console.log(parsed.examples); // Array of examples
  * console.log(parsed.constraints); // Array of constraints
  */
-class QuestionParser {
+export class QuestionParser {
 	/**
 	 * Parses LeetCode HTML content into a structured format
 	 */
 	static parseProblemHtml(html: string): ParsedHTML {
-		const $ = cheerio.load(html);
-		// Find the first example header
-		const firstExample = $("strong.example").first().closest("p");
-
-		let description = "";
-		if (firstExample.length) {
-			const parts: string[] = [];
-
-			// Extract all elements before the first example
-			firstExample.prevAll().each((_, element) => {
-				const $el = $(element);
-
-				// In case it's a pre element, we need to
-				if ($el.is("pre")) {
-					parts.unshift("\n");
-					parts.unshift(" -> " + $el.text().trim() + "\n\n");
-					parts.unshift(" \n");
-					return;
-				}
-
-				if ($el.is("ul")) {
-					const bullets: string[] = [];
-					$el.find("li").each((i, li) => {
-						if (i === 0) {
-							bullets.push("\n");
-							bullets.push(" -> " + $(li).text().trim());
-							bullets.push(" \n");
-							return;
-						}
-
-						if (i == $el.find("li").length - 1) {
-							bullets.push(" -> " + $(li).text().trim());
-							bullets.push(" \n");
-							bullets.push("\n");
-							return;
-						}
-
-						bullets.push(" -> " + $(li).text().trim());
-						bullets.push(" \n");
-					});
-					parts.unshift(...bullets);
-					return;
-				}
-
-				const $clone = $el.clone();
-				$clone.find("code").each((_, codeEl) => {
-					$(codeEl).replaceWith(`"${$(codeEl).text()}"`);
-				});
-
-				const text = $clone.text().trim();
-				if (text) {
-					parts.unshift(text + "\n\n");
-				}
-			});
-
-			description = parts
-				.join("")
-				.replace(/\n{3,}/g, "\n\n")
-				.trim();
-		}
-
-		// Extract examples
-		const examples: string[] = [];
-		$("pre").each((_, element) => {
-			examples.push($(element).text().trim());
+	  // 1) Load the entire HTML into $full (for examples & constraints)
+	  const $full = cheerio.load(html);
+  
+	  // 2) Find the index of the first <strong class="example"> in the raw HTML
+	  const firstExampleIndex = html.indexOf('<strong class="example">');
+	  // If none is found, the entire HTML is the description
+	  let descHtml =
+		firstExampleIndex > -1 ? html.slice(0, firstExampleIndex) : html;
+	  descHtml = descHtml.trim();
+  
+	  // 3) Parse only that "description" chunk with another Cheerio instance
+	  const $desc = cheerio.load(descHtml);
+  
+	  // 4) GLOBAL REPLACEMENTS on $desc to preserve your custom formatting
+	  //
+	  // (A) Replace every <code>...</code> with "..."
+	  $desc("code").each((_, codeEl) => {
+		const codeText = $desc(codeEl).text().trim();
+		// Replace <code>...</code> with "someCode"
+		$desc(codeEl).replaceWith(`"${codeText}"`);
+	  });
+  
+	  // (B) Replace every <pre> with "\n -> preText\n\n"
+	  $desc("pre").each((_, preEl) => {
+		const preText = $desc(preEl).text().trim();
+		// We insert a short marker with leading/trailing newlines
+		const replacement = `\n -> ${preText}\n\n`;
+		$desc(preEl).replaceWith(replacement);
+	  });
+  
+	  // (C) Replace every <ul> with bullet lines
+	  $desc("ul").each((_, ulEl) => {
+		const bulletLines: string[] = [];
+		const $lis = $desc(ulEl).find("li");
+		// Build lines like:
+		//   -> bullet 1
+		//   -> bullet 2
+		// with blank lines around
+		$lis.each((_index, li) => {
+		  const bulletText = $desc(li).text().trim();
+		  bulletLines.push(` -> ${bulletText}\n`);
 		});
-
-		// Extract constraints
-		const constraints: string[] = [];
-		// Find the constraints section by looking for the header text
-		const constraintsHeader = $("p").filter((_, element) =>
-			$(element).text().includes("Constraints:"),
-		);
-
-		// If we found the constraints section, get the following ul/li elements
-		if (constraintsHeader.length) {
-			constraintsHeader
-				.next("ul")
-				.find("li")
-				.each((_, element) => {
-					constraints.push($(element).text().trim());
-				});
-		}
-
-		return {
-			description,
-			examples,
-			constraints,
-		};
+		// Insert newlines before & after
+		const replacement = `\n${bulletLines.join("")}\n`;
+		$desc(ulEl).replaceWith(replacement);
+	  });
+  
+	  // (D) Now we can get pure text from $desc
+	  // This includes all the replaced strings for <pre> / <ul> / <code>
+	  let description = $desc.root().text();
+  
+	  // 5) Clean up extra newlines
+	  description = description.replace(/\r\n/g, "\n");  // unify line endings
+	  description = description.replace(/\n{3,}/g, "\n\n"); // collapse triple+ newlines to double
+	  description = description.trim();
+  
+	  // 6) Extract examples from the *full* HTML
+	  const examples: string[] = [];
+	  $full("pre").each((_, el) => {
+		examples.push($full(el).text().trim());
+	  });
+  
+	  // 7) Extract constraints from the *full* HTML
+	  const constraints: string[] = [];
+	  const constraintsHeader = $full("p").filter((_, pEl) =>
+		$full(pEl).text().includes("Constraints:")
+	  );
+	  if (constraintsHeader.length) {
+		constraintsHeader
+		  .next("ul")
+		  .find("li")
+		  .each((_, liEl) => {
+			constraints.push($full(liEl).text().trim());
+		  });
+	  }
+  
+	  // 8) Return final object
+	  return {
+		description,
+		examples,
+		constraints,
+	  };
 	}
-}
+  }
+			
 /**
  * Class responsible for generating formatted comment blocks for LeetCode questions.
  *
