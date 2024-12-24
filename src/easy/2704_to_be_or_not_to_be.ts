@@ -17,3 +17,16 @@
  *
  * URL: https://leetcode.com/problems/to-be-or-not-to-be/
 */
+
+export const toBeOrNotToBe = (val: unknown) => {
+	// Throw Error constant
+	const throwError = (errorStr: string) => {
+		throw new Error(errorStr);
+	};
+
+	// Return the functions
+	return {
+		toBe: (val2: unknown) => val2 === val || throwError("Not Equal"),
+		notToBe: (val2: unknown) => val2 !== val || throwError("Equal"),
+	};
+};
