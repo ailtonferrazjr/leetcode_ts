@@ -18,13 +18,14 @@ Each solution includes detailed explanations, time and space complexity analysis
 
 - Improve problem-solving skills through code
 - Improve my TypeScript knowledge
-- Prove to myself that I can do it 
+- Prove to myself that I can do it
 
 ## 🔧 Technologies Used
 
 - TypeScript / Node.js
 - Vitest for testing
 - Husky for Git Hook
+- Biome.js for Lint/Formatter
 
 ## 📦 Getting Started
 
@@ -38,7 +39,7 @@ Each solution includes detailed explanations, time and space complexity analysis
 
 
     ```bash
-    cd leetcode-ts
+    cd leetcode_ts
     npm install
     ```
 
