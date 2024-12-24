@@ -1,6 +1,7 @@
-import { promises as fs } from "fs";
+import { promises as fsPromises } from "fs";
+import fs from "fs";
 import path from "path";
-import { input } from "@inquirer/prompts";
+import { confirm, input } from "@inquirer/prompts";
 import chalk from "chalk";
 import { QuestionFetcher } from "./QuestionFetcher.js";
 import { Difficulty, type Question } from "./types.js";
@@ -26,6 +27,19 @@ async function startPrompt(): Promise<string> {
 		return url;
 	} catch (error) {
 		console.error(chalk.red("Error during input collection:"), error);
+		throw error;
+	}
+}
+
+async function shouldOverwritePrompt(title: string): Promise<boolean> {
+	try {
+		return await confirm({
+			message: `A file of the problem '${title}' is already present in the repository, should overwrite it?\n`,
+		});
+	} catch (error) {
+		console.error(
+			`There was an error on getting the confirmation to overwrite`,
+		);
 		throw error;
 	}
 }
@@ -68,18 +82,22 @@ async function createFiles(fetcher: QuestionFetcher): Promise<void> {
 		const { solution, test } = getFilePaths(title, fetcher.question.difficulty);
 
 		// Ensure directories exist
-		await fs.mkdir(path.dirname(solution), { recursive: true });
-		await fs.mkdir(path.dirname(test), { recursive: true });
-
-		// Create the comments
+		await fsPromises.mkdir(path.dirname(solution), { recursive: true });
+		await fsPromises.mkdir(path.dirname(test), { recursive: true });
 
 		// Write to solution and test files
-		await fs.writeFile(solution, fetcher.comments.questionComments);
-		await fs.writeFile(test, fetcher.comments.testsComments);
+		await fsPromises.writeFile(solution, fetcher.comments.questionComments);
+		await fsPromises.writeFile(test, fetcher.comments.testsComments);
 	} catch (error) {
 		console.error(chalk.red("Error creating files:"), error);
 		throw error;
 	}
+}
+
+function isExistingProblem(fetcher: QuestionFetcher): boolean {
+	const title = parseTitle(fetcher.question);
+	const { solution } = getFilePaths(title, fetcher.question.difficulty);
+	return fs.existsSync(solution);
 }
 
 /**
@@ -92,6 +110,24 @@ async function main(): Promise<void> {
 
 		// Then start the fetcher to return the problem data
 		const fetcher: QuestionFetcher = await QuestionFetcher.create(url);
+
+		// Check if it's an existing problem
+		if (isExistingProblem(fetcher)) {
+			const shouldOverwrite = await shouldOverwritePrompt(
+				`${fetcher.question.questionId} | ${fetcher.question.title}`,
+			);
+
+			// In case the response is that we shouldn't overwrite
+			if (!shouldOverwrite) {
+				console.log(chalk.yellow(`Operation cancelled!`));
+				return;
+			}
+
+			// Overwrite the files
+			await createFiles(fetcher);
+			console.log(chalk.green("The files were overwrite succesfully!"));
+			return;
+		}
 
 		// Create the files
 		await createFiles(fetcher);
