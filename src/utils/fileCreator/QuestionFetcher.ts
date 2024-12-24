@@ -177,14 +177,14 @@ export class QuestionFetcher {
 }
 /**
  * Parses LeetCode HTML content and extracts problem description, examples, and constraints.
- * 
+ *
  * @static
  * @param {string} html - The HTML content from a LeetCode problem page
  * @returns {ParsedHTML} An object containing the parsed problem information
  * @property {string} description - The problem description text
  * @property {string[]} examples - Array of example test cases
  * @property {string[]} constraints - Array of problem constraints
- * 
+ *
  * @example
  * const html = '<div>problem content...</div>';
  * const parsed = QuestionParser.parseProblemHtml(html);
