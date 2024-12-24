@@ -4,13 +4,14 @@
 	"main": "index.js",
 	"type": "module",
 	"scripts": {
+		"init": "tsx scripts/init.ts",
 		"alias": "source .aliases",
 		"test": "vitest",
 		"exec": "tsx",
 		"lint": "npx @biomejs/biome check --write",
 		"prepare": "husky",
-		"update:solutions": "tsx src/utils/counter.ts",
-		"new": "tsx src/utils/fileCreator/createFiles.ts"
+		"update:counter": "tsx scripts/counter.ts",
+		"new": "tsx scripts/new.ts"
 	},
 	"keywords": [],
 	"author": "Justin Ferraz",

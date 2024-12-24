@@ -3,8 +3,8 @@ import fs from "fs";
 import path from "path";
 import { confirm, input } from "@inquirer/prompts";
 import chalk from "chalk";
-import { QuestionFetcher } from "./QuestionFetcher.js";
-import { Difficulty, type Question } from "./types.js";
+import { QuestionFetcher } from "../src/utils/fileCreator/QuestionFetcher.js";
+import { Difficulty, type Question } from "../src/utils/fileCreator/types.js";
 
 interface FilePaths {
 	solution: string;
@@ -103,7 +103,7 @@ function isExistingProblem(fetcher: QuestionFetcher): boolean {
 /**
  * The main function orchestrating the script execution.
  */
-async function main(): Promise<void> {
+async function newProblem(): Promise<void> {
 	try {
 		// Start the prompt to collect problem name and difficulty
 		const url = await startPrompt();
@@ -141,4 +141,4 @@ async function main(): Promise<void> {
 }
 
 // Execute the main function
-await main();
+await newProblem();
