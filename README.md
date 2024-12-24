@@ -4,7 +4,7 @@ This repository contains my solutions to various LeetCode problems implemented i
 Each solution includes detailed explanations, time and space complexity analysis, and test cases.
 
 ## Summary of Solutions
-- Easy: 12
+- Easy: 13
 - Medium: 1
 - Hard: 0
 
@@ -22,9 +22,9 @@ Each solution includes detailed explanations, time and space complexity analysis
 
 ## 🔧 Technologies Used
 
-- TypeScript
+- TypeScript / Node.js
 - Vitest for testing
-- Node.js
+- Husky for Git Hook
 
 ## 📜 License
 
