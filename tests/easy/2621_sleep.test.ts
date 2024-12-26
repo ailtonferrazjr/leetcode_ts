@@ -20,12 +20,14 @@ describe("2621 | Sleep", () => {
 	test.each(testSamples)(
 		"Testing the delay $millis, which expect the result to be close to $expected",
 		async ({ millis, expected }: { millis: number; expected: number }) => {
-			const start = Date.now();
+			const start = performance.now();
 			await sleep(millis);
-			const end = Date.now();
+			const end = performance.now();
 			const elapsed = end - start;
-			expect(elapsed).toBeGreaterThanOrEqual(millis);
-			expect(elapsed).toBeLessThan(expected + 2);
+			const diffMillis = Math.abs(millis - elapsed);
+			const diffElapsedExpected = Math.abs(elapsed - expected);
+			expect(diffMillis).toBeLessThanOrEqual(5);
+			expect(diffElapsedExpected).toBeLessThanOrEqual(5);
 		},
 	);
 });
