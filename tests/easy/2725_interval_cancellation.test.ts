@@ -85,7 +85,7 @@ describe("2725 | Interval Cancellation", () => {
 				for (let i = 0; i < expected.length; i++) {
 					expect(result[i].returned).toEqual(expected[i].returned);
 					const diff = Math.abs(result[i].time - expected[i].time);
-					expect(diff).toBeLessThanOrEqual(20);
+					expect(diff).toBeLessThanOrEqual(10);
 				}
 			}
 			if (expected.length == 0) {

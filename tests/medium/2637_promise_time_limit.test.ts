@@ -75,16 +75,10 @@ describe("2637 | Promise Time Limit", () => {
 
 			if (Object.keys(result).includes("rejected")) {
 				expect(result.rejected).toEqual(expected.rejected);
-				console.log(
-					`\n    Result: ${result.rejected}, matches expected: ${result.rejected === expected.rejected}`,
-				);
 			}
 
 			if (Object.keys(result).includes("resolved")) {
 				expect(result.resolved).toEqual(expected.resolved);
-				console.log(
-					`\n    Result: ${result.resolved}, matches expected: ${result.resolved === expected.resolved}`,
-				);
 			}
 			const diff = Math.abs((result.time as number) - expected.time);
 			expect(diff).toBeLessThanOrEqual(5);
