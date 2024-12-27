@@ -5,7 +5,7 @@ Each solution includes detailed explanations, time and space complexity analysis
 
 ## Summary of Solutions
 - Easy: 14
-- Medium: 4
+- Medium: 5
 - Hard: 0
 
 ## 🚀 Features
