@@ -4,7 +4,7 @@ This repository contains my solutions to various LeetCode problems implemented i
 Each solution includes detailed explanations, time and space complexity analysis, and test cases.
 
 ## Summary of Solutions
-- Easy: 16
+- Easy: 17
 - Medium: 5
 - Hard: 0
 
