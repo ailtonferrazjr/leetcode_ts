@@ -19,7 +19,6 @@
  * URL: https://leetcode.com/problems/promise-time-limit/
 */
 
-// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 export type Fn = (...params: any[]) => Promise<any>;
 
 export function timeLimit(fn: Fn, t: number): Fn {

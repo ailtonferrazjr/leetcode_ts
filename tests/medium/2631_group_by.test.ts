@@ -3,7 +3,6 @@ import "@medium/2631_group_by.js";
 describe("2631 | Group By", () => {
 	// Type definitions for better clarity
 
-	// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 	type TestFunction1 = (item: Record<string, any>) => string;
 	type TestFunction2 = (list: number[]) => string;
 	type TestFunction3 = (n: number) => string;

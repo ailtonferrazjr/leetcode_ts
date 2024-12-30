@@ -59,7 +59,6 @@ describe("2637 | Promise Time Limit", () => {
 	test.each(samples)(
 		"Testing the fn $fn, with timeout limit of $t and inputs $inputs, expecting $expected",
 		async ({ fn, inputs, t, expected }) => {
-			// biome-ignore lint/suspicious/noExplicitAny: <explanation>
 			const result: { [key: string]: any } = {};
 			const start = performance.now();
 			const limited = timeLimit(fn, t);
