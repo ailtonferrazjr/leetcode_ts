@@ -14,6 +14,12 @@ import { gql, request } from "graphql-request";
 import { ElementType } from "htmlparser2";
 import { queries } from "./query.js";
 import { Difficulty, type Question } from "./types.js";
+import dotenv from "dotenv";
+
+// Import the 
+dotenv.config();
+const LEETCODE_SESSION = process.env.LEETCODE_SESSION || null;
+
 
 /**
  * LeetCode's GraphQL response structure for general question data (title, difficulty, etc.).
@@ -108,6 +114,8 @@ export class QuestionFetcher {
 	public question!: Question;
 	/** Comment blocks for both the question and its tests. */
 	public comments!: { questionComments: string; testsComments: string };
+	/** Error details from question data */
+	public premiumProblem: boolean = false;
 
 	/**
 	 * Factory method to create and initialize a `QuestionFetcher`.
@@ -152,15 +160,22 @@ export class QuestionFetcher {
 	 * @private
 	 */
 	private async _initialize(): Promise<void> {
+
 		const { questionContent, questionData } = await this.getQuestionData(
 			this.url,
 		);
+
+		if (questionData.question.isPaidOnly && !questionContent.question.content) {
+			throw new Error(`This is a premium problem and we don't have access to it!`);
+		}
+
 		this.question = this.parseQuestion(questionData, questionContent);
 		this.comments = {
 			questionComments: QuestionCommentBlock.question(this.question),
 			testsComments: QuestionCommentBlock.tests(this.question),
 		};
 	}
+
 
 	/**
 	 * Fetches both the question content (HTML) and question data (metadata) from LeetCode.
@@ -201,8 +216,21 @@ export class QuestionFetcher {
 		titleSlug: string,
 	): Promise<QuestionContent | QuestionData> {
 		try {
+
 			const document = gql`${query}`;
+
+			// In case we have the LEETCODE_SESSION
+			if (LEETCODE_SESSION) {
+				const headers: Record<string, string> = {
+					'Content-Type': 'application/json',
+					'Cookie': `LEETCODE_SESSION=${LEETCODE_SESSION}`
+				}
+				return await request(this.endpoint, document, { titleSlug}, headers);
+			}
+
+			// In case we don't have the LEETCODE_SESSION
 			return await request(this.endpoint, document, { titleSlug });
+
 		} catch (error) {
 			throw new Error(`Failed to fetch question data: ${error}`);
 		}
@@ -259,9 +287,11 @@ export class QuestionFetcher {
 		questionData: QuestionData,
 		questionContent: QuestionContent,
 	): Question {
+
 		const { description, examples, constraints } = this.parseContent(
 			questionContent.question.content,
 		);
+
 		const { title, titleSlug, questionFrontendId, difficulty } =
 			questionData.question;
 
@@ -275,7 +305,7 @@ export class QuestionFetcher {
 			difficulty,
 			questionUrl: this.getCleanUrl(this.url),
 		};
-	}
+}
 }
 
 /**
