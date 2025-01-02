@@ -17,16 +17,16 @@
 */
 
 export class ArrayWrapper {
-    arr: number[];
-    constructor(nums: number[]) {
-        this.arr = nums;
-    }
-    
-    valueOf(): number {
-        return this.arr.reduce((acc, it) => acc + it,0);
-    }
-    
-    toString(): string {
-        return `[${this.arr}]`
-    }
-};
+	arr: number[];
+	constructor(nums: number[]) {
+		this.arr = nums;
+	}
+
+	valueOf(): number {
+		return this.arr.reduce((acc, it) => acc + it, 0);
+	}
+
+	toString(): string {
+		return `[${this.arr}]`;
+	}
+}
