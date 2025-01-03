@@ -47,17 +47,17 @@ describe("2636 | Promise Pool", () => {
 			const elapsedTimes: number[] = [];
 			const wrappedFunctions = functions.map((fn) => async () => {
 				const result = await fn();
-				elapsedTimes.push(Date.now() - start); // Record time elapsed
+				elapsedTimes.push(Date.now() - start);
 				return result;
 			});
 
 			// Run the promise pool
 			await promisePool(wrappedFunctions, n);
 
-			// Validate the sequence of resolution times with a margin of ±50ms
-			const expectedTimes = expected[0] as number[]; // Explicitly cast to number[]
-			const expectedTotal = expected[1] as number; // Explicitly cast to number
-			const margin = 50; // Allowable error margin in ms
+			// Validate the sequence of resolution times with a margin of time (+ or -)
+			const expectedTimes = expected[0] as number[];
+			const expectedTotal = expected[1] as number;
+			const margin = 50;
 
 			// Sort actual elapsed times if concurrency affects order
 			const sortedElapsed = [...elapsedTimes].sort((a, b) => a - b);
@@ -70,7 +70,7 @@ describe("2636 | Promise Pool", () => {
 				expect(time).toBeLessThanOrEqual(sortedExpected[index] + margin);
 			});
 
-			// Validate total time within margin
+			// Validate total time
 			const totalTime = Math.max(...elapsedTimes);
 			expect(totalTime).toBeGreaterThanOrEqual(expectedTotal - margin);
 			expect(totalTime).toBeLessThanOrEqual(expectedTotal + margin);
