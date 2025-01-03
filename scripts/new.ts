@@ -11,9 +11,9 @@ import fs from "fs";
 import path from "path";
 import { confirm, input } from "@inquirer/prompts";
 import chalk from "chalk";
+import dotenv from "dotenv";
 import { QuestionFetcher } from "../src/utils/fileCreator/QuestionFetcher.js";
 import { Difficulty, type Question } from "../src/utils/fileCreator/types.js";
-import dotenv from "dotenv";
 
 dotenv.config();
 const LEETCODE_SESSION = process.env.LEETCODE_SESSION;
@@ -142,8 +142,6 @@ function isExistingProblem(fetcher: QuestionFetcher): boolean {
 	return fs.existsSync(solution);
 }
 
-
-
 /**
  * The main function orchestrating the script execution for adding a new LeetCode problem.
  *
@@ -185,22 +183,32 @@ async function newProblem(): Promise<void> {
 		// Create files if no existing problem
 		await createFiles(fetcher);
 		console.log(chalk.green("Files created successfully!"));
-
 	} catch (error) {
-
 		// In case it's a premium problem, we need to throw the premium flow
 		if (error instanceof Error && error.message.includes("premium")) {
-			console.log(chalk.red("This is a premium problem, and we need access to fetch its data."));
+			console.log(
+				chalk.red(
+					"This is a premium problem, and we need access to fetch its data.",
+				),
+			);
 
 			// In case we have the LEETCODE_SESSION variable and we still can't fetch the question content
 			if (LEETCODE_SESSION) {
-				console.log(chalk.yellow("The LEETCODE_SESSION value in your .env file appears to be invalid."));
+				console.log(
+					chalk.yellow(
+						"The LEETCODE_SESSION value in your .env file appears to be invalid.",
+					),
+				);
 				console.log(chalk.yellow("Please check your .env file and try again."));
 				process.exit(1);
 			}
 
 			// In case we don't have it, we just instruct the user to save the file
-			console.log(chalk.yellow("Please log in to https://leetcode.com/, copy your session cookie, save it as LEETCODE_SESSION in your .env file, and try again."))
+			console.log(
+				chalk.yellow(
+					"Please log in to https://leetcode.com/, copy your session cookie, save it as LEETCODE_SESSION in your .env file, and try again.",
+				),
+			);
 			process.exit(1);
 		}
 
